@@ -1,30 +1,29 @@
-let todos = []; // temporary in-memory storage (will reset on server restart)
+// app/api/todos/route.js
+import clientPromise from "@/lib/mongodb";
 
-// GET all todos
 export async function GET() {
-  return new Response(JSON.stringify(todos), { status: 200 });
+  try {
+    const client = await clientPromise;
+    const db = client.db("todo-app"); // ✅ match your DB name in URI
+    const todos = await db.collection("todos").find({}).toArray();
+
+    return Response.json(todos);
+  } catch (error) {
+    console.error("GET error:", error);
+    return Response.json({ error: error.message }, { status: 500 });
+  }
 }
 
-// POST - create a new todo
 export async function POST(req) {
-  const body = await req.json();
-  const newTodo = { id: Date.now(), text: body.text, completed: false };
-  todos.push(newTodo);
-  return new Response(JSON.stringify(newTodo), { status: 201 });
-}
+  try {
+    const body = await req.json();
+    const client = await clientPromise;
+    const db = client.db("todo-app"); // ✅ same DB as above
+    const result = await db.collection("todos").insertOne(body);
 
-// PUT - update a todo
-export async function PUT(req) {
-  const body = await req.json();
-  todos = todos.map((todo) =>
-    todo.id === body.id ? { ...todo, ...body } : todo
-  );
-  return new Response(JSON.stringify({ success: true }), { status: 200 });
-}
-
-// DELETE - remove a todo
-export async function DELETE(req) {
-  const body = await req.json();
-  todos = todos.filter((todo) => todo.id !== body.id);
-  return new Response(JSON.stringify({ success: true }), { status: 200 });
+    return Response.json(result);
+  } catch (error) {
+    console.error("POST error:", error);
+    return Response.json({ error: error.message }, { status: 500 });
+  }
 }
