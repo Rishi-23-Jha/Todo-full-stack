@@ -1,70 +1,76 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const [todos, setTodos] = useState([]);
   const [input, setInput] = useState("");
 
-  // Load todos from localStorage on first render
+  // Fetch todos from API
   useEffect(() => {
-    const storedTodos = localStorage.getItem("todos");
-    if (storedTodos) {
-      setTodos(JSON.parse(storedTodos));
-    }
+    fetch("/api/todos")
+      .then((res) => res.json())
+      .then((data) => setTodos(data));
   }, []);
 
-  // Save todos to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem("todos", JSON.stringify(todos));
-  }, [todos]);
-
-  const addTodo = () => {
+  // Add todo
+  const addTodo = async () => {
     if (!input.trim()) return;
-    const newTodo = { id: Date.now(), text: input, completed: false };
+    const res = await fetch("/api/todos", {
+      method: "POST",
+      body: JSON.stringify({ text: input }),
+    });
+    const newTodo = await res.json();
     setTodos([...todos, newTodo]);
     setInput("");
   };
 
-  const toggleTodo = (id) => {
+  // Toggle complete
+  const toggleTodo = async (id, completed) => {
+    await fetch("/api/todos", {
+      method: "PUT",
+      body: JSON.stringify({ id, completed: !completed }),
+    });
     setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
+      todos.map((t) => (t.id === id ? { ...t, completed: !completed } : t))
     );
   };
 
-  const deleteTodo = (id) => {
-    setTodos(todos.filter((todo) => todo.id !== id));
+  // Delete todo
+  const deleteTodo = async (id) => {
+    await fetch("/api/todos", {
+      method: "DELETE",
+      body: JSON.stringify({ id }),
+    });
+    setTodos(todos.filter((t) => t.id !== id));
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen p-6 bg-gray-100">
-      <h1 className="text-2xl font-bold mb-4">Todo App</h1>
+    <main className="p-6 max-w-lg mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Next.js Todo App</h1>
 
       <div className="flex gap-2 mb-4">
         <input
-          type="text"
-          className="p-2 border rounded"
+          className="border p-2 flex-1 rounded"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Enter a task"
+          placeholder="Add a new task"
         />
         <button
           onClick={addTodo}
-          className="px-4 py-2 bg-blue-500 text-white rounded"
+          className="bg-blue-500 text-white px-4 py-2 rounded"
         >
           Add
         </button>
       </div>
 
-      <ul className="w-full max-w-md">
+      <ul className="space-y-2">
         {todos.map((todo) => (
           <li
             key={todo.id}
-            className="flex justify-between items-center bg-white shadow p-2 mb-2 rounded"
+            className="flex justify-between items-center border p-2 rounded"
           >
             <span
-              onClick={() => toggleTodo(todo.id)}
+              onClick={() => toggleTodo(todo.id, todo.completed)}
               className={`cursor-pointer ${
                 todo.completed ? "line-through text-gray-500" : ""
               }`}
@@ -80,6 +86,6 @@ export default function Home() {
           </li>
         ))}
       </ul>
-    </div>
+    </main>
   );
 }
