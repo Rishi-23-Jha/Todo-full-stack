@@ -1,4 +1,3 @@
-// page.js (or app/page.js)
 "use client";
 import { useEffect, useState } from "react";
 
@@ -30,9 +29,7 @@ export default function Home() {
     try {
       const res = await fetch("/api/todos", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: input.trim() }),
       });
 
@@ -54,9 +51,7 @@ export default function Home() {
     try {
       const res = await fetch("/api/todos", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, completed: !completed }),
       });
 
@@ -80,9 +75,7 @@ export default function Home() {
     try {
       const res = await fetch("/api/todos", {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       });
 
@@ -133,33 +126,83 @@ export default function Home() {
       </div>
 
       {todos.length === 0 ? (
-        <div className="text-gray-500 text-center py-8">
-          No todos yet. Add one above!
+        <div className="text-gray-500 text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
+          <div className="text-4xl mb-2">📝</div>
+          <div>No todos yet. Add one above!</div>
         </div>
       ) : (
-        <ul className="space-y-2">
-          {todos.map((todo) => (
-            <li
-              key={todo.id}
-              className="flex justify-between items-center border p-2 rounded"
-            >
-              <span
-                onClick={() => toggleTodo(todo.id, todo.completed)}
-                className={`cursor-pointer flex-1 ${
-                  todo.completed ? "line-through text-gray-500" : ""
-                }`}
+        <>
+          {/* Summary stats */}
+          <div className="flex gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {todos.length}
+              </div>
+              <div className="text-xs text-gray-600">Total</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-600">
+                {todos.filter((t) => !t.completed).length}
+              </div>
+              <div className="text-xs text-gray-600">Pending</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {todos.filter((t) => t.completed).length}
+              </div>
+              <div className="text-xs text-gray-600">Completed</div>
+            </div>
+          </div>
+
+          <ul className="space-y-2">
+            {todos.map((todo) => (
+              <li
+                key={todo.id}
+                className="flex items-center gap-3 border p-3 rounded hover:bg-gray-50"
               >
-                {todo.text}
-              </span>
-              <button
-                onClick={() => deleteTodo(todo.id)}
-                className="text-red-500 hover:text-red-700 ml-2"
-              >
-                ❌
-              </button>
-            </li>
-          ))}
-        </ul>
+                {/* Checkbox */}
+                <input
+                  type="checkbox"
+                  checked={todo.completed}
+                  onChange={() => toggleTodo(todo.id, todo.completed)}
+                  className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                />
+
+                {/* Todo text */}
+                <span
+                  onClick={() => toggleTodo(todo.id, todo.completed)}
+                  className={`flex-1 cursor-pointer select-none ${
+                    todo.completed
+                      ? "line-through text-gray-500"
+                      : "text-gray-900"
+                  }`}
+                >
+                  {todo.text}
+                </span>
+
+                {/* Status badge */}
+                <span
+                  className={`px-2 py-1 text-xs rounded-full ${
+                    todo.completed
+                      ? "bg-green-100 text-green-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}
+                >
+                  {todo.completed ? "Completed" : "Pending"}
+                </span>
+
+                {/* Delete button */}
+                <button
+                  onClick={() => deleteTodo(todo.id)}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
+                  title="Delete todo"
+                >
+                  ❌
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </main>
   );
